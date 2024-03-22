@@ -1,11 +1,24 @@
+from enum import Enum
+import sys
+
 states = {
     'u_cell': None,
     'x_cell': True,
     'o_cell': False,
 }
 
+
+class CheckMethodType(Enum):
+    MATRIX = "matrix"
+    TREE = "tree"
+    @classmethod
+    def _missing_(cls, value):
+        return cls.TREE
+
+
 is_finite_field = True
 sign_sequence_limit = 3
+chosen_check_method = CheckMethodType.TREE
 
 messages = {
     'ENTER_COORDS': 'Введите координаты ряда и колонки через запятую:',
@@ -161,10 +174,16 @@ def is_field_not_full(field):
     return process_field(field, (lambda f, indices, _: f[indices[0]][indices[1]] == states['u_cell']))
 
 
+def is_finishing(field, last_coords, limit):
+    if chosen_check_method == CheckMethodType.TREE:
+        return not is_finishing_by_tree(field, last_coords, limit)
+    elif chosen_check_method == CheckMethodType.MATRIX:
+        return not is_finishing_by_matrix(field, last_coords, limit)
+
+
 def is_game_not_finished(field, last_coords):
-    if (is_field_not_full(field) if is_finite_field else True):
-        # return not is_finishing_by_matrix(field, last_coords, sign_sequence_limit)
-        return not is_finishing_by_tree(field, last_coords, sign_sequence_limit)
+    if is_field_not_full(field) if is_finite_field else True:
+        return is_finishing(field, last_coords, sign_sequence_limit)
     else:
         return False
 
@@ -215,4 +234,19 @@ def play(field):
         current_value = states['x_cell'] if current_value == states['o_cell'] else states['o_cell']
 
 
+def setup(args):
+    global chosen_check_method
+    is_method_correct = lambda a: a == CheckMethodType.TREE or a == CheckMethodType.MATRIX
+    if len(args) > 1:
+        for arg in args[1:]:
+            if is_method_correct(arg):
+                chosen_check_method = CheckMethodType(arg)
+    else:
+        user_input = input("Введите желаемый алгоритм проверки выйгрыша (matrix/tree): ")
+        while not is_method_correct(user_input):
+            user_input = input("Неверно, введите корректное значение (matrix/tree): ")
+        chosen_check_method = CheckMethodType(user_input)
+
+
+setup(sys.argv)
 play(init(3))
