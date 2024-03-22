@@ -52,8 +52,8 @@ def get_cell_view(value):
 
 
 def get_delimiter_cell_view(symbol_count):
-    str = "
-    for i in range(symbol_count):
+    str = ""
+    for _ in range(symbol_count):
         str += "-"
     return str
 
@@ -61,12 +61,12 @@ def get_delimiter_cell_view(symbol_count):
 def print_field(field):
     col_count = len(field[0])
     for i in range(len(field)):
-        row_string = "
-        delimiter = "
+        row_string = ""
+        delimiter = ""
         for j in range(col_count):
             cell = get_cell_view(field[i][j])
-            row_string += (" if j == 0 else "|") + cell
-            delimiter += (" if j == 0 else "+") + get_delimiter_cell_view(len(cell))
+            row_string += ("" if j == 0 else "|") + cell
+            delimiter += ("" if j == 0 else "+") + get_delimiter_cell_view(len(cell))
         print(row_string)
         if i < len(field) - 1:
             print(delimiter)
@@ -130,7 +130,7 @@ def is_finishing_by_matrix(field, last_coords, limit):
     process_field(field, get_matrix_field_processing_callback,
                   {"matrix": matrix, "last_coords": last_coords, "limit": limit})
     for p in get_patterns_for_matrix(limit):
-        string_by_pattern = ".join(get_string_from_matrix_by_pattern(matrix, p))
+        string_by_pattern = "".join(get_string_from_matrix_by_pattern(matrix, p))
         if "X" * limit in string_by_pattern or "O" * limit in string_by_pattern:
             return True
     return False
