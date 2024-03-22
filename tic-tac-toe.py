@@ -25,6 +25,8 @@ messages = {
     "WRONG_COORDS": "Выбранное Вами поле занято, введите корректные координаты...",
     "INPUT_FINISHING_METHOD": "Введите желаемый алгоритм проверки выйгрыша (matrix/tree): ",
     "INPUT_WRONG_FINISHING_METHOD": "Неверно, введите корректное значение (matrix/tree): ",
+    "WIN_COMPUTER": "Выиграл компьютер",
+    "WIN_PLAYER": "Вы выиграли!",
 }
 
 
@@ -220,10 +222,12 @@ def play(field):
     current_value = states["x_cell"]
     turn_counter = 0
     last_coords = (0, 0)
+    player_number = 0
     while is_game_not_finished(field, last_coords):
         turn_counter += 1
+        player_number = turn_counter % 2
 
-        if turn_counter % 2 == 0:
+        if player_number == 0:
             result = put_computer_value(field, current_value)
             print_field(field)
             last_coords = result[1]
@@ -234,11 +238,14 @@ def play(field):
             last_coords = result[1]
 
         current_value = states["x_cell"] if current_value == states["o_cell"] else states["o_cell"]
+    
+    print_field(field)
+    print(messages["WIN_COMPUTER"] if player_number == 0 else messages["WIN_PLAYER"])
 
 
 def setup(args):
     global chosen_check_method
-    is_method_correct = lambda a: a == CheckMethodType.TREE or a == CheckMethodType.MATRIX
+    is_method_correct = lambda a: a == CheckMethodType.TREE.value or a == CheckMethodType.MATRIX.value
     if len(args) > 1:
         for arg in args[1:]:
             if is_method_correct(arg):
