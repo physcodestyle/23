@@ -23,6 +23,8 @@ chosen_check_method = CheckMethodType.TREE
 messages = {
     'ENTER_COORDS': 'Введите координаты ряда и колонки через запятую:',
     'WRONG_COORDS': 'Выбранное Вами поле занято, введите корректные координаты...',
+    "INPUT_FINISHING_METHOD": "Введите желаемый алгоритм проверки выйгрыша (matrix/tree): ",
+    "INPUT_WRONG_FINISHING_METHOD": "Неверно, введите корректное значение (matrix/tree): ",
 }
 
 
@@ -242,9 +244,9 @@ def setup(args):
             if is_method_correct(arg):
                 chosen_check_method = CheckMethodType(arg)
     else:
-        user_input = input("Введите желаемый алгоритм проверки выйгрыша (matrix/tree): ")
+        user_input = input(messages['INPUT_FINISHING_METHOD'])
         while not is_method_correct(user_input):
-            user_input = input("Неверно, введите корректное значение (matrix/tree): ")
+            user_input = input(messages['INPUT_WRONG_FINISHING_METHOD'])
         chosen_check_method = CheckMethodType(user_input)
 
 
