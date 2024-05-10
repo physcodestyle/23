@@ -7,6 +7,20 @@ states = {
     "o_cell": False,
 }
 
+class FieldType(Enum):
+    FINITE = "finite"
+    INFINITE = "infinite"
+    
+    @classmethod
+    def _missing_(cls, value):
+        return cls.INFINITE
+
+    @classmethod
+    def is_finite_field(cls):
+        if cls == FieldType.FINITE:
+            return True
+        elif cls == FieldType.INFINITE:
+            return False
 
 class CheckMethodType(Enum):
     MATRIX = "matrix"
@@ -15,8 +29,7 @@ class CheckMethodType(Enum):
     def _missing_(cls, value):
         return cls.TREE
 
-
-is_finite_field = True
+is_finite_field = False
 sign_sequence_limit = 3
 chosen_check_method = CheckMethodType.TREE
 
@@ -25,18 +38,24 @@ messages = {
     "WRONG_COORDS": "Выбранное Вами поле занято, введите корректные координаты...",
     "INPUT_FINISHING_METHOD": "Введите желаемый алгоритм проверки выйгрыша (matrix/tree): ",
     "INPUT_WRONG_FINISHING_METHOD": "Неверно, введите корректное значение (matrix/tree): ",
+    "INPUT_FIELD_TYPE": "Введите тип поля (finite/infinite): ",
+    "INPUT_WRONG_FIELD_TYPE": "Неверно, введите корректное значение (finite/infinite): ",
     "WIN_COMPUTER": "Выиграл компьютер",
     "WIN_PLAYER": "Вы выиграли!",
 }
 
 
+def get_row_default_state(col_count):
+    row = []
+    for _ in range(col_count):
+        row.append(states["u_cell"])
+    return row
+
+
 def get_field_default_state(col_count, row_count):
     field = []
-    for i in range(row_count):
-        row = []
-        for j in range(col_count):
-            row.append(states["u_cell"])
-        field.append(row)
+    for _ in range(row_count):
+        field.append(get_row_default_state(col_count))
     return field
 
 
@@ -210,12 +229,49 @@ def put_player_input(field, value):
 
 
 def put_computer_value(field, value):
-    coords = (2, 2)
+    coords = (3, 3)
     return (put_value(field, int(coords[0]) - 1, int(coords[1]) - 1, value), (int(coords[0]) - 1, int(coords[1]) - 1))
 
 
 def init(field_size):
-    return get_square_field_default_state(field_size)
+    if is_finite_field:
+        return get_square_field_default_state(field_size)
+    else:
+        max_size = field_size * 3
+        return get_square_field_default_state(max_size + max_size % 2 - 1)
+
+
+def increase_field(field, limit):
+    field_size = len(field)
+    vertical_frame = get_row_default_state(limit)
+    for row_index in range(field_size):
+        field[row_index] = vertical_frame.copy() + field[row_index] + vertical_frame.copy()
+    horizontal_frame = get_field_default_state(field_size + limit * 2, limit)
+    return horizontal_frame.copy() + field.copy() + horizontal_frame.copy()
+
+
+def setup_request(callback, request_message, wrong_message):
+    user_input = input(request_message)
+    while not callback(user_input):
+        user_input = input(wrong_message)
+    return user_input
+
+
+def setup(args):
+    global chosen_check_method
+    global is_finite_field
+    is_method_correct = lambda a : a == CheckMethodType.TREE.value or a == CheckMethodType.MATRIX.value
+    is_field_type_correct = lambda t : t == FieldType.FINITE.value or t == FieldType.INFINITE.value
+    if len(args) > 1:
+        for arg in args[1:]:
+            if is_method_correct(arg):
+                chosen_check_method = CheckMethodType(arg)
+            if is_field_type_correct(arg):
+                is_finite_field = FieldType(arg).is_finite_field()
+
+    else:
+        chosen_check_method = CheckMethodType(setup_request(is_method_correct, messages["INPUT_FINISHING_METHOD"], messages["INPUT_WRONG_FINISHING_METHOD"]))
+        is_finite_field = FieldType(setup_request(is_field_type_correct, messages["INPUT_FIELD_TYPE"], messages["INPUT_WRONG_FIELD_TYPE"])).is_finite_field()
 
 
 def play(field):
@@ -236,25 +292,14 @@ def play(field):
             while (result[0] == False):
                 result = put_player_input(field, current_value)
             last_coords = result[1]
+        field_size = len(field)
+        if not is_finite_field and (last_coords[0] <= 1 or last_coords[0] >= field_size - 2 or last_coords[1] <= 1 or last_coords[1] >= field_size - 2):
+            field = increase_field(field, sign_sequence_limit)
 
         current_value = states["x_cell"] if current_value == states["o_cell"] else states["o_cell"]
     
     print_field(field)
     print(messages["WIN_COMPUTER"] if player_number == 0 else messages["WIN_PLAYER"])
-
-
-def setup(args):
-    global chosen_check_method
-    is_method_correct = lambda a: a == CheckMethodType.TREE.value or a == CheckMethodType.MATRIX.value
-    if len(args) > 1:
-        for arg in args[1:]:
-            if is_method_correct(arg):
-                chosen_check_method = CheckMethodType(arg)
-    else:
-        user_input = input(messages["INPUT_FINISHING_METHOD"])
-        while not is_method_correct(user_input):
-            user_input = input(messages["INPUT_WRONG_FINISHING_METHOD"])
-        chosen_check_method = CheckMethodType(user_input)
 
 
 setup(sys.argv)
