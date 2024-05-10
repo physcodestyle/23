@@ -1,0 +1,43 @@
+.field {
+  display: grid;
+  align-items: center;
+  justify-content: center;
+}
+
+.sign {
+  display: grid;
+  align-items: stretch;
+  justify-content: stretch;
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  background-color: burlywood;
+  border: 1px solid black;
+}
+
+.cell {
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  margin: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+.cell::after {
+  display: block;
+  font-size: 24px;
+}
+
+.cell--empty::after {
+  content: ' ';
+}
+
+.cell--cross:checked::after {
+  content: 'X';
+}
+
+.cell--oval:checked::after {
+  content: 'O';
+}
