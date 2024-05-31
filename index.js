@@ -1,3 +1,5 @@
+const serverHost = 'http://127.0.0.1:8000'
+
 const field = {
   columns: 7,
   count: 35,
@@ -22,12 +24,20 @@ function serializeForm(formNode) {
   return data
 }
 
-async function sendData(data) {
-  return await fetch('/turn/', {
+async function sendData(x, y, field) {
+  return await fetch(`${serverHost}/cross/${x}/${y}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'multipart/form-data' },
-    body: data,
+    headers: { 'Content-Type': 'application/json' },
+    body: 'field',
   })
+    .then(async (r) => {
+      if (r.status === 200) {
+        onSuccess(await r.json())
+      } else {
+        onError(await r.json())
+      }
+      
+    })
 }
 
 function onSuccess(data) {
@@ -49,13 +59,8 @@ form.addEventListener('submit', async (event) => {
   const data = serializeForm(event.target)
     .filter((c) => c.value === true)
     .filter((c) => c.name === turnData)
-  const { status } = await sendData(data)
-  if (status === 200) {
-    onSuccess(turnData)
-    document.querySelector(`input[name='${turnData}']`).disabled = true
-  } else {
-    onError(turnData)
-  }
+  await sendData(3, 5, data)
+  document.querySelector(`input[name='${turnData}']`).disabled = true
 })
 
 const map = document.querySelector('.field')
